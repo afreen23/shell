@@ -23,8 +23,15 @@ int main() {
 		if(characters == -1) {
 			exit(1);
 		}
-		if(line[0] != '\n')
-			printf("Unrecognized command\n");
+		if(line[0] != '\n') {
+			int i = 0, k = 0;
+			char word[128];
+			while(k < 128 && line[i] != '\0' && !isspace(line[i])){
+				word[k++] = line[i++];
+			}
+			word[k]='\0';
+			printf("Unrecognized command: %s\n", word);
+		}
 		printf("%s$ ", path);		
 	}
 
