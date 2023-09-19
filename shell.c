@@ -17,7 +17,7 @@ void prompt() {
 	printf("%s$ ", path);		
 }
 
-void exit_command(char (*args)[], int size) {
+void exit_command(int size) {
 	if(size != 0) {
 		printf("Invalid argument: exit takes no arguments.\n");
 		return;
@@ -25,14 +25,16 @@ void exit_command(char (*args)[], int size) {
 	exit(0);
 }
 
-// void cd_command(char** args, int size) {
-// 	if (size != 1) {
-// 		printf("Usage: cd takes only one argument\n");
-// 		return;
-// 	}
-
-
-// }
+void cd_command(char (*args)[], int size) {
+	if (size != 1) {
+		printf("Usage: cd takes only one argument, %d argument provided.\n", size);
+		return;
+	}
+	int errno = chdir(*args);
+	if(errno == -1) {
+		printf("Command failed with error code -1");
+	}
+}
 
 // void exec_command(char** args, int size) {
 // 	if(cmds == NULL) {
@@ -75,7 +77,7 @@ int main() {
 			/* Arguments of command */
 			char args[ARGUMENTS][INPUT_CHARACTERS];
 			int i = 0,  j = 0;
-			while(i < ARGUMENTS && j < INPUT_CHARACTERS && line[l] != '\0'){
+			while((i < ARGUMENTS) && (j < INPUT_CHARACTERS) && (line[l] != '\0')){
 				if(isspace(line[l])) {
 					args[i][j] = '\0';
 					i++;
@@ -84,12 +86,12 @@ int main() {
 				args[i][j++] = line[l++];
 			}	
 			if(strcmp(cmd, "exit") == 0) {
-				exit_command(args, i);
+				exit_command(i);
 			}
-			// else if(strcomp(cmd, "cd") == 0) {
-			// 	cd_command(args, i);
-			// }
-			// else if(strcomp(cmd. "exec") == 0) {
+			else if(strcmp(cmd, "cd") == 0) {
+				cd_command(args, i);
+			}
+			// else if(strcmp(cmd. "exec") == 0) {
 			// 	exec_command(args, i);
 			// }
 			else {
