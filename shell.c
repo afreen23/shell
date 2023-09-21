@@ -71,12 +71,9 @@ int main() {
 				cmd[k++] = line[l++];
 			}
 			if(line[l] == '\0') {
-				cmd[k] = l;
-			}
-			else {
-				cmd[k] = '\0';
 				l++;
 			}
+			cmd[k] = '\0';
 			/* Arguments of command */
 			char** args= (char**)malloc(sizeof(char*)*ARGUMENTS);
 			int i = 0,  j = 0;
@@ -92,7 +89,7 @@ int main() {
 				else
 					args[i][j++] = line[l++];
 			}
-			args[i][j] = '\0';	
+			args[i][j] = '\0';
 			if(strcmp(cmd, "exit") == 0) {
 				exit_command(i);
 			}
