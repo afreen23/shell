@@ -49,15 +49,18 @@ void exec_command(char** args, int size) {
 	}
 }
 
-void execute_as_child_process(char **args, int size) {
+void execute_as_child_process(char *cmd, char **args) {
 	pid_t pid = fork();
 	if(pid < 0)
 		perror("Fork failed");
 	if(pid == 0) {
-		exec_command(args, size);
+		if(execv(cmd, args) == -1) {
+			perror("Command failed");
+		}
 		exit_command(0);
 	}
-	wait(NULL);
+	if (waitpid(pid, NULL, 0) == -1) 
+		perror("waitpid");
 }
 
 int main() {
@@ -99,7 +102,7 @@ int main() {
 			args[i][j] = '\0';
 			// Matching commands
 			if(cmd[0] == '.' || cmd[0] == '/') {
-				execute_as_child_process(args, i);
+				execute_as_child_process(cmd, args);
 			}
 			else if(strcmp(cmd, "exit") == 0) {
 				exit_command(i);
