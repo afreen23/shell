@@ -1,12 +1,15 @@
 #include<stdio.h>
+#include<errno.h>
+#include<sys/types.h>
 #include<unistd.h>
 #include<stdlib.h>
 #include<ctype.h>
 #include<string.h>
+#include<wait.h>
 
 #define DIR_CHARACTERS 128
 #define INPUT_CHARACTERS 128
-#define ARGUMENTS 50
+#define ARGUMENTS 10
 
 /* Current working directory path */
 char path[DIR_CHARACTERS];
@@ -16,9 +19,10 @@ void prompt() {
 	printf("%s$ ", path);		
 }
 
+
 void exit_command(int size) {
 	if(size != 0) {
-		printf("Invalid argument: exit takes no arguments.\n");
+		printf("Invalid argument: exit takes no arguments\n");
 		return;
 	}
 	exit(0);
@@ -26,71 +30,78 @@ void exit_command(int size) {
 
 void cd_command(char** args, int size) {
 	if (size != 1) {
-		printf("Usage: cd takes only one argument, %d argument provided.\n", size);
+		printf("Usage: cd takes only one argument, %d arguments provided\n", size);
 		return;
 	}
-	int errno = chdir(*args);
-	if(errno == -1) {
-		printf("Command failed with error code -1\n");
+	if(chdir(args[0]) == -1) {
+		perror("Command failed");
 	}
 }
 
 void exec_command(char** args, int size) {
 	if(size < 1) {
-		printf("Usage: exec takes at least one argument %d arguments provided.\n", size);
+		printf("Usage: exec takes at least one argument %d arguments provided\n", size);
 		return;
 	}
 	const char* pathname = args[0];
-	int errno = execv(pathname, args);
-	if(errno == -1) {
-		printf("Command failed with error code -1\n");
+	if(execv(pathname, args) == -1) {
+		perror("Command failed");
 	}
+}
+
+void execute_as_child_process(char **args, int size) {
+	pid_t pid = fork();
+	if(pid < 0)
+		perror("Fork failed");
+	if(pid == 0) {
+		exec_command(args, size);
+		exit_command(0);
+	}
+	wait(NULL);
 }
 
 int main() {
 	prompt();
-
-	char* line;
 	size_t size = INPUT_CHARACTERS;
-	int characters;
-	line = (char *)malloc(sizeof(char)*size);
+	char* line = (char *)malloc(sizeof(char)*size);
 	if(line == NULL) {
 		perror("Unable to allocate buffer\n");
 		exit(1);
 	}
-
 	while(1) {
 		if(getline(&line, &size, stdin) == -1) {
 			exit(1);
 		}
 		if(line[0] != '\n') {
-			/* Input command */
-			int l = 0, k = 0;
+			// Input command
+			int l = 0, i = 0, j = 0;
 			char cmd[INPUT_CHARACTERS];
-			while(k < INPUT_CHARACTERS && line[l] != '\0' && !isspace(line[l])){
-				cmd[k++] = line[l++];
+			while(i < INPUT_CHARACTERS && line[l] != '\0' && !isspace(line[l])){
+				cmd[i++] = line[l++];
 			}
-			if(line[l] == '\0') {
-				l++;
-			}
-			cmd[k] = '\0';
-			/* Arguments of command */
+			l++;
+			cmd[i] = '\0';
+			// Arguments
 			char** args= (char**)malloc(sizeof(char*)*ARGUMENTS);
-			int i = 0,  j = 0;
-			args[i] = (char*)malloc(sizeof(char)*INPUT_CHARACTERS);
-			while((i < ARGUMENTS) && (j < INPUT_CHARACTERS) && (line[l] != '\0')){
-				if(isspace(line[l])) {
+			args[0] = (char*)malloc(sizeof(char)*INPUT_CHARACTERS);
+			i = 0;
+			while ((i < ARGUMENTS) && (j < INPUT_CHARACTERS) && (line[l] != '\0')){
+				if (isspace(line[l])) {
 					args[i][j] = '\0';
 					i++;
-					j=0;
 					l++;
+					j = 0;
 					args[i] = (char*)malloc(sizeof(char)*INPUT_CHARACTERS);
 				}
 				else
 					args[i][j++] = line[l++];
 			}
 			args[i][j] = '\0';
-			if(strcmp(cmd, "exit") == 0) {
+			// Matching commands
+			if(cmd[0] == '.' || cmd[0] == '/') {
+				execute_as_child_process(args, i);
+			}
+			else if(strcmp(cmd, "exit") == 0) {
 				exit_command(i);
 			}
 			else if(strcmp(cmd, "cd") == 0) {
