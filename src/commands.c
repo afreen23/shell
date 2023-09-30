@@ -6,13 +6,17 @@
 #include<wait.h>
 #include "commands.h"
 
-void execute_command(char** cmd) {
+void execute_file(char** cmd) {
+    if (cmd[0] == NULL) {
+        printf("No command provided");
+        return;
+    }
 	pid_t pid = fork();
 	if(pid < 0)
 		perror("Fork failed");
 	if(pid == 0) {
 		if(execv(cmd[0], cmd) == -1) {
-			perror("execv");
+			perror("Error in executing the command");
 		}
 		exit(0);
 	}
@@ -34,4 +38,17 @@ void change_directory(char** cmd) {
 		printf("Usage: cd takes only one argument\n");
 	else if (chdir(cmd[1]) == -1)
 		perror("Error in changing directory");
+}
+
+void execute_command(char** cmd) {
+	if (cmd[1] == NULL)
+		printf("Usage: exec takes at least one argument and none provided.\n");
+	else if(execv(cmd[0], cmd) == -1) {
+		perror("Error in executing command");
+	}
+}
+
+void execute_unrecognized_command(char** cmd) {
+    if (cmd[0] != NULL)
+        printf("Unrecognized command %s\n", cmd[0]);
 }
