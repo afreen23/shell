@@ -36,33 +36,39 @@ void free_tokenized_input(char** input) {
 //     The first pointer points to the command and rest points to arguments.
 //     For example, if the input is "ls -l -a", the resulting array could be: {"ls", "-l", "-a"}.
 char** tokenize_input(char* input) { 
-	char** buffer= (char**)malloc(sizeof(char*)*INPUT_TOKENS_COUNT);
-	if(buffer == NULL) {
+	char** tokens= (char**)malloc(sizeof(char*)*INPUT_TOKENS_COUNT);
+	if(tokens == NULL) {
 		perror("Unable to allocate buffer\n");
 		exit(1);
 	}
 
-	// Initialize all pointers to NULL for clean up later
+	// Initialize all pointers to NULL
 	for(int  i = 0 ; i < INPUT_TOKENS_COUNT; i++)
-		buffer[i] = NULL;
+		tokens[i] = NULL;
 
-	buffer[0] = allocate_buffer();
-	int  i = 0, si = 0, ic = 0;
+	int  input_index = 0, tokens_index = 0, char_index = 0;
 
 	// Iterate through the input string to tokenize it
-	while ((input[i] != '\0') && (si < INPUT_TOKENS_COUNT) && (ic < INPUT_CHARACTERS_COUNT)) {
-		if (!isspace(input[i])) {
-			buffer[si][ic++] = input[i];
+	while ((input[input_index] != '\0') && (tokens_index < INPUT_TOKENS_COUNT) && (char_index < INPUT_CHARACTERS_COUNT)) {
+
+		// Allocate space for the token if its starting with a character that is not blank space
+		if ((char_index == 0) && !isspace(input[input_index]))
+		 	tokens[tokens_index] = allocate_buffer();
+
+		// Ensure storing characters until space is found
+		if (!isspace(input[input_index])) {
+			tokens[tokens_index][char_index++] = input[input_index];
 		}
-		// Skip if space is the first input character of a sub input
-		else if (ic != 0){
-			buffer[si][ic] = '\0';
-			si++;
-			ic = 0;
-			buffer[si] = allocate_buffer();
+		// Null terminate token when blank space encountered at the end of a character stream
+		else if (char_index != 0) {
+			tokens[tokens_index][char_index] = '\0';
+			tokens_index++;
+			char_index = 0; 
 		}
-		i++;
+		input_index++;
 	}
-	buffer[si][ic] = '\0';
-	return buffer;
+	// Ensure the last token is null-terminated
+	if (tokens[tokens_index] != NULL)
+		tokens[tokens_index][char_index] = '\0';
+	return tokens;
 }
