@@ -1,68 +1,15 @@
+// shell.c
 #include<stdio.h>
 #include<errno.h>
 #include<sys/types.h>
 #include<sys/stat.h>
 #include<unistd.h>
 #include<stdlib.h>
-#include<ctype.h>
 #include<string.h>
 #include<wait.h>
-
-#define DIR_CHARACTERS 128
-#define INPUT_CHARACTERS_COUNT 128
-#define INPUT_TOKENS_COUNT 11
-
-void prompt() {
-	char path[DIR_CHARACTERS]; // Current working directory path
-	if (getcwd(path, DIR_CHARACTERS) == NULL) {
-		perror("getcwd");
-	}
-	printf("%s$ ", path);		
-}
-
-void clean_up(char** buffer) {
-	for(int i = 0 ; i < INPUT_TOKENS_COUNT; i++)
-		if (buffer[i] != NULL) {
-			free(cmd[i]);
-			buffer[i] = NULL;
-		}
-	free(buffer);
-}
-
-char* allocate_buffer() {
-	char* buf = (char*)malloc(sizeof(char)*INPUT_CHARACTERS_COUNT);
-	if(buf == NULL) {
-		perror("Unable to allocate buffer\n");
-		exit(1);
-	}
-	return buf;
-}
-
-char** get_command_with_arguments(char* input) { // tokenizes the input line into separate commands and arguments
-	char** cmd= (char**)malloc(sizeof(char*)*INPUT_TOKENS_COUNT);
-	if(cmd == NULL) {
-		perror("Unable to allocate buffer\n");
-		exit(1);
-	}
-	for(int  i = 0 ; i < INPUT_TOKENS_COUNT; i++) // initialize all pointers to NULL for clean up later
-		cmd[i] = NULL;
-	cmd[0] = allocate_buffer();
-	int  i = 0, si = 0, ic = 0;
-	while ((input[i] != '\0') && (si < INPUT_TOKENS_COUNT) && (ic < INPUT_CHARACTERS_COUNT)) {
-		if (!isspace(input[i])) {
-			cmd[si][ic++] = input[i];
-		}
-		else if(ic != 0){ // skip if space is the first input character of a sub input
-			cmd[si][ic] = '\0';
-			si++;
-			ic = 0;
-			cmd[si] = allocate_buffer();
-		}
-		i++;
-	}
-	cmd[si][ic] = '\0';
-	return cmd;
-}
+#include "prompt.h"
+#include "tokenize.h"
+#include "constants.h"
 
 int main() {
 	prompt();
@@ -70,12 +17,12 @@ int main() {
 	char* line = allocate_buffer();
 	while(1) {
 		if(getline(&line, &size, stdin) == -1) {
-			perror("getline");
+			perror("Error reading input");
 			exit(1);
 		}
 		if(line[0] != '\n') {
-			char** cmd = get_command_with_arguments(line);
-			clean_up(cmd);
+			char** cmd = tokenize_input(line);
+			free_tokenized_input(cmd);
 		}
 		prompt();
 	}
