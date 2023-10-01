@@ -2,10 +2,9 @@
 #ifndef PROMPT_H
 #define PROMPT_H
 
-// Function: prompt
-// Purpose: Display the shell prompt, showing the current working directory.
-//          This function does not take any arguments and does not return a value.
-// Usage: Call this function to display the prompt in shell program.
+// This header file includes all functions related to prompt
+
+// Display the shell prompt, showing the current working directory.
 void prompt();
 
 #endif

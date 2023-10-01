@@ -6,19 +6,19 @@
 #include "tokenize.h"
 #include "constants.h"
 #include "commands.h"
+#include "memutils.h"
 
 int main() {
 	prompt();
 	size_t size = INPUT_CHARACTERS_COUNT;
-	char* line = allocate_buffer();
+	char* input = allocate_char_buffer(size);
 	while(1) {
-		if(getline(&line, &size, stdin) == -1) {
+		if(getline(&input, &size, stdin) == -1) {
 			perror("Error reading input");
 			exit(1);
 		}
-		if(line[0] != '\n') {
-			char** cmd = tokenize_input(line);
-
+		if(input[0] != '\n') {
+			char** cmd = tokenize_input(input);
 			if(cmd[0][0] == '.' || cmd[0][0] == '/')
 				execute_file(cmd);
 			else if(strcmp(cmd[0], "exit") == 0)
@@ -29,11 +29,11 @@ int main() {
 				execute_command(cmd);
 			else
 				execute_unrecognized_command(cmd);
-
-			free_tokenized_input(cmd);
+			// clean up
+			free_tokenize_input(cmd);
 		}
 		prompt();
 	}
-	free(line);
+	free(input);
 	return 0;
 }
