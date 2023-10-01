@@ -55,15 +55,17 @@ void execute_command(char** cmd) {
 // Accesses the file in the given directory
 // Returns the filepath if access is successful, otherwise returns NULL
 char* get_file(char* dirpath, char* filename) {
-	size_t totalLength = strlen(dirpath) + strlen(filename) + 1;
+	size_t totalLength = strlen(dirpath) + strlen(filename) + 2; // Two more memory space for '/' and '\0'
 	struct stat file_info;
 	char* filepath = allocate_char_buffer(totalLength);
 
 	snprintf(filepath, totalLength, "%s/%s", dirpath, filename);
+
 	if (stat(filepath, &file_info) == -1) {
 		free(filepath);
 		return NULL;
 	}
+	
 	return filepath;
 }
 
@@ -81,33 +83,45 @@ char* find_file(char* filename) {
 
 	// Checking file from first directory path upto second last path
 	while (paths[paths_index] != '\0') {
+
 		if ((cd_index == 0) && (paths[paths_index] != ':'))
 			curr_dir = allocate_char_buffer(DIR_CHARACTERS);
+
 		if (paths[paths_index] != ':')
 			curr_dir[cd_index++] = paths[paths_index];
+
 		else if (cd_index != 0) {
 			curr_dir[cd_index] = '\0';
+
+			// Return file path if found
 			filepath = get_file(curr_dir, filename);
 			if (filepath != NULL) {
 				free(curr_dir);
 				curr_dir = NULL;
 				return filepath;
 			}
+
+			// Reset to store the new directory path
 			free(curr_dir);
 			curr_dir = NULL;
 			cd_index = 0;
 		}
 		paths_index++;
 	}
+
 	// Checking inside the last directory path
 	if (curr_dir != NULL) {
 		curr_dir[cd_index] = '\0';
 		char* filepath = get_file(curr_dir, filename);
+
+		// Clean up
 		free(curr_dir);
 		curr_dir = NULL;
+
 		if (filepath != NULL)
 			return filepath;
 	}
+
 	free(filepath);
 	return NULL;
 }

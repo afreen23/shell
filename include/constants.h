@@ -2,7 +2,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-// This header file defines various constants used throughout the program.
+// This header file defines various constants.
 
 // Maximum number of characters in a directory name
 #define DIR_CHARACTERS 128
